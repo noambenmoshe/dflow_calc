@@ -26,9 +26,30 @@ public:
     int** depsMatrix;
     instruction* instArray;
     map<int, int> regMap;
+    unsigned int numOfInsts;
 
-    instGraph(unsigned int numOfInsts){};
-    ~instGraph(){};
+    instGraph(unsigned int numOfInsts){
+        this->numOfInsts = numOfInsts;
+
+        //initial matrix
+        int rows = numOfInsts + 2, cols = numOfInsts + 2; // +2 for EXIT and ENTRY
+        depsMatrix = new int*[rows];
+        for (int i = 0; i < rows; ++i)
+            depsMatrix[i] = new int[cols] {0};
+
+        // initial instruction array
+        instArray = new instruction[numOfInsts];
+    };
+    ~instGraph(){
+        //delete matrix
+        for (int i = 0; i < numOfInsts + 2; ++i)
+            delete [] depsMatrix[i];
+        delete [] depsMatrix;
+
+        //delete instArray
+        delete[] instArray;
+
+    };
     /*
      * initial instruction instance
      * look for register deps. in regMap (input reg)
