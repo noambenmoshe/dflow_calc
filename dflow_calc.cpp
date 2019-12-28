@@ -6,7 +6,8 @@
 
 // meta-instructions for dependencies
 #define ENTRY -1 // must not change !!! value used in getInstDeps
-#define EXIT -2
+#define INVALID -2
+#define EXIT -3
 //typedef std::map<int,int>::iterator mapIt;
 typedef std::pair<int,int> regPair;
 using std::map;
@@ -25,7 +26,9 @@ public:
     int dependency2;
     int depth; // time until inst. can be executed
 
-
+    // default c'tor (for array)
+    instruction(): instKey(INVALID), instTime(INVALID),dstIdx(INVALID), src1Idx(INVALID), src2Idx(INVALID),
+                    dependency1(INVALID), dependency2(INVALID), depth(INVALID) {}
     instruction(int instKey, int instTime, int dstIdx, unsigned int src1Idx, unsigned int src2Idx,
                 int dependency1, int dependency2, int depth) : instKey(instKey), instTime(instTime),
                                                                dstIdx(dstIdx), src1Idx(src1Idx), src2Idx(src2Idx),
@@ -68,7 +71,7 @@ public:
    // * look for register deps. in regMap (input reg)
     int findDepInRegMap(int srcIdx){
         auto it = regMap.find(srcIdx);
-        if(it == regMap.end()){
+        if(it == regMap.end()){ // register not exist - no one write for it
             return ENTRY;
         }
         else return it->second;
@@ -88,7 +91,7 @@ public:
         if(depTime > maxDepth)
             maxDepth=depTime;
     }
-    int caltDepthTime(int keyDep){
+    int calcDepthTime(int keyDep){
         if(keyDep == ENTRY)
             return 0;
         else return instArray[keyDep].depth + instArray[keyDep].instTime;
@@ -96,8 +99,8 @@ public:
 
     //calculate depth
     int calcDepth(int keyDep1, int keyDep2){
-        int dep1Time =caltDepthTime(keyDep1);
-        int dep2Time =caltDepthTime(keyDep2);;
+        int dep1Time =calcDepthTime(keyDep1);
+        int dep2Time =calcDepthTime(keyDep2);;
 
         if( dep1Time > dep2Time){
             updateMaxDepth(dep1Time);
