@@ -18,33 +18,35 @@ public:
     unsigned int src2Idx;
     int depth;
     int instKey;
-
+    // new
+    int dependency1;
+    int dependency2;
 };
 
 class instGraph{
 public:
-    int** depsMatrix;
+//    int** depsMatrix;
     instruction* instArray;
-    map<int, int> regMap;
-    unsigned int numOfInsts;
+    map<int, int> regMap; // val - last op writing to REG (key)
+    unsigned int numOfInsts; // total number of inst. in prog.
 
     instGraph(unsigned int numOfInsts){
         this->numOfInsts = numOfInsts;
 
         //initial matrix
-        int rows = numOfInsts + 2, cols = numOfInsts + 2; // +2 for EXIT and ENTRY
-        depsMatrix = new int*[rows];
-        for (int i = 0; i < rows; ++i)
-            depsMatrix[i] = new int[cols] {0};
+//        int rows = numOfInsts + 2, cols = numOfInsts + 2; // +2 for EXIT and ENTRY
+//        depsMatrix = new int*[rows];
+//        for (int i = 0; i < rows; ++i)
+//            depsMatrix[i] = new int[cols] {0};
 
         // initial instruction array
         instArray = new instruction[numOfInsts];
     };
     ~instGraph(){
         //delete matrix
-        for (int i = 0; i < numOfInsts + 2; ++i)
-            delete [] depsMatrix[i];
-        delete [] depsMatrix;
+//        for (int i = 0; i < numOfInsts + 2; ++i)
+//            delete [] depsMatrix[i];
+//        delete [] depsMatrix;
 
         //delete instArray
         delete[] instArray;
