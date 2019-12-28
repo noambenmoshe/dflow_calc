@@ -4,6 +4,9 @@
 #include "dflow_calc.h"
 #include <map>
 
+// meta-instructions for dependencies
+#define ENTRY -1
+#define EXIT -2
 
 using std::map;
 
@@ -16,11 +19,12 @@ public:
     int dstIdx;
     unsigned int src1Idx;
     unsigned int src2Idx;
-    int depth;
+    int depth; // time until inst. can be executed
     int instKey;
     // new
     int dependency1;
     int dependency2;
+    int instTime; // inst execute time
 };
 
 class instGraph{
