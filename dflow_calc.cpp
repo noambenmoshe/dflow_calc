@@ -63,7 +63,7 @@ public:
      * update regMap (dest register)
      * calculate depth
      * */
-    void insertInst(){};
+    void insertInst(InstInfo inst, int key, int latency){};
 
 
 
@@ -76,10 +76,17 @@ public:
 //    API
 //****************************************************************************************************//
 ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[], unsigned int numOfInsts) {
+    instGraph graph = instGraph(numOfInsts);
+
+    for(int i=0; i<numOfInsts; i++){
+        int instKey = i;
+        int instLatency = opsLatency[]
+        graph.insertInst(progTrace[i], i, )
+    }
 
 
 
-    return PROG_CTX_NULL;
+    return (void *)(&graph); // return void* (API)
 }
 
 void freeProgCtx(ProgCtx ctx) {
