@@ -71,7 +71,7 @@ public:
         if(it == regMap.end()){
             return ENTRY;
         }
-        else return it->first;
+        else return it->second;
     }
 
     //* update regMap (dest register)
@@ -84,22 +84,30 @@ public:
             it->second = instKey;
         }
     }
-
-    //  * calculate depth
-    int calcDepth(int keyDep1, int keyDep2){
-        int dep1Time = instArray[keyDep1].depth + instArray[keyDep1].instTime;
-        int dep2Time = instArray[keyDep2].depth + instArray[keyDep2].instTime;
-
+    void updateMaxDepth(int depTime){
+        if(depTime > maxDepth)
+            maxDepth=depTime;
+    }
+    int caltDepthTime(int keyDep){
+        if(keyDep == ENTRY)
+            return 0;
+        else return instArray[keyDep].depth + instArray[keyDep].instTime;
     }
 
+    //calculate depth
+    int calcDepth(int keyDep1, int keyDep2){
+        int dep1Time =caltDepthTime(keyDep1);
+        int dep2Time =caltDepthTime(keyDep2);;
 
-    /*
-     * initial instruction instance
-     * look for register deps. in regMap (input reg)
-     * update matrix
-     * update regMap (dest register)
-     * calculate depth
-     * */
+        if( dep1Time > dep2Time){
+            updateMaxDepth(dep1Time);
+            return dep1Time;
+        }
+        else{
+            updateMaxDepth(dep2Time);
+            return dep2Time;
+        }
+   }
 
     // get all information about the instruction and call the instruction c'tor
     void insertInst(InstInfo inst, int key, int latency){
