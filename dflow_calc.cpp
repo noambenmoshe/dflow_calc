@@ -5,7 +5,7 @@
 #include <map>
 
 // meta-instructions for dependencies
-#define ENTRY -1
+#define ENTRY -1 // must not change !!! value used in getInstDeps
 #define EXIT -2
 
 using std::map;
@@ -33,10 +33,10 @@ public:
     instruction* instArray;
     map<int, int> regMap; // val - last op writing to REG (key)
     unsigned int numOfInsts; // total number of inst. in prog.
+    int maxDepth;
 
-    instGraph(unsigned int numOfInsts){
-        this->numOfInsts = numOfInsts;
-
+    instGraph(unsigned int numOfInsts): numOfInsts(numOfInsts), maxDepth(0){
+        //this->numOfInsts = numOfInsts;
         //initial matrix
 //        int rows = numOfInsts + 2, cols = numOfInsts + 2; // +2 for EXIT and ENTRY
 //        depsMatrix = new int*[rows];
@@ -75,33 +75,55 @@ public:
 //*****************************************************************************************************//
 //    API
 //****************************************************************************************************//
+instGraph * pProgGraph;
 ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[], unsigned int numOfInsts) {
-    instGraph graph = instGraph(numOfInsts);
+    pProgGraph = new instGraph(numOfInsts);
 
     for(int i=0; i<numOfInsts; i++){
         int instKey = i;
-        int instLatency = opsLatency[]
-        graph.insertInst(progTrace[i], i, )
+        int instLatency = opsLatency[progTrace[i].opcode];
+        pProgGraph->insertInst(progTrace[i], instKey, instLatency);
     }
-
-
-
-    return (void *)(&graph); // return void* (API)
+    return (void *)(pProgGraph); // return void* (API)
 }
 
 void freeProgCtx(ProgCtx ctx) {
+    delete pProgGraph;
 }
 
 int getInstDepth(ProgCtx ctx, unsigned int theInst) {
-    return -1;
+    if(ctx == PROG_CTX_NULL)
+        return -1;
+    instGraph * pGraph = (instGraph *)ctx;
+//    if(pGraph->instArray[theInst].dependency1 == ENTRY &&
+//            pGraph->instArray[theInst].dependency2 == ENTRY){
+//        return 0; // return -1 if not dependent in anything
+//    }
+    int numOfInsts = pGraph->numOfInsts;
+    if (theInst < 0 || theInst >= numOfInsts){
+        return -1; // illegal instruction
+    }
+    int instDepth = pGraph->instArray[theInst].depth; // return instruction's depth
+    return instDepth; // verify that return 0 if no depth
 }
 
 int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2DepInst) {
-    return -1;
+    if(ctx == PROG_CTX_NULL)
+        return -1;
+    instGraph * pGraph = (instGraph *)ctx;
+    int numOfInsts = pGraph->numOfInsts;
+    if (theInst < 0 || theInst >= numOfInsts) {
+        return -1; // illegal instruction
+    }
+    *src1DepInst = pGraph->instArray[theInst].dependency1;
+    *src2DepInst = pGraph->instArray[theInst].dependency2;
+
+    return 0;
 }
 
 int getProgDepth(ProgCtx ctx) {
-    return 0;
+    instGraph * pGraph = (instGraph *)ctx;
+    return pGraph->maxDepth;
 }
 
 
