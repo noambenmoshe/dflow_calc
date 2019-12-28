@@ -3,15 +3,18 @@
 
 #include "dflow_calc.h"
 #include <map>
+#include <iostream>
 
 // meta-instructions for dependencies
 #define ENTRY -1 // must not change !!! value used in getInstDeps
 #define INVALID -2
 #define EXIT -3
+#define DEBUG 0 // change to 0
 //typedef std::map<int,int>::iterator mapIt;
 typedef std::pair<int,int> regPair;
 using std::map;
-
+using std::cout;
+using std::endl;
 //******************************************************************************************************//
 // help classes
 //******************************************************************************************************//
@@ -87,27 +90,30 @@ public:
             it->second = instKey;
         }
     }
-    void updateMaxDepth(int depTime){
-        if(depTime > maxDepth)
-            maxDepth=depTime;
+    // update maxDepth if input time is longer
+    void updateMaxDepth(int depTime, int instTime){
+        if(depTime + instTime > maxDepth)
+            maxDepth=depTime + instTime;
+
+        if(DEBUG)
+            std::cout << "max depth is: " << maxDepth << std::endl;
     }
+    // return keyDep instruction min execution time
     int calcDepthTime(int keyDep){
         if(keyDep == ENTRY)
             return 0;
         else return instArray[keyDep].depth + instArray[keyDep].instTime;
     }
 
-    //calculate depth
+    //return max depth time between instruction keyDep1, keyDep2
     int calcDepth(int keyDep1, int keyDep2){
         int dep1Time =calcDepthTime(keyDep1);
         int dep2Time =calcDepthTime(keyDep2);;
 
         if( dep1Time > dep2Time){
-            updateMaxDepth(dep1Time);
             return dep1Time;
         }
         else{
-            updateMaxDepth(dep2Time);
             return dep2Time;
         }
    }
@@ -119,8 +125,9 @@ public:
         int depth = calcDepth(dep1Key,dep2Key);
 
         instArray[key] = instruction(key,latency,inst.dstIdx,inst.src1Idx, inst.src2Idx,dep1Key,dep2Key,depth);
-        updateRegMap(inst.src1Idx, key);
-        updateRegMap(inst.src2Idx, key);
+        updateRegMap(inst.dstIdx, key);
+        updateMaxDepth(depth, latency); // update only if longer
+       // updateRegMap(inst.src2Idx, key);
 
     };
 
@@ -138,7 +145,7 @@ instGraph * pProgGraph;
 ProgCtx analyzeProg(const unsigned int opsLatency[], const InstInfo progTrace[], unsigned int numOfInsts) {
     pProgGraph = new instGraph(numOfInsts);
 
-    for(int i=0; i<numOfInsts; i++){
+    for(int i=0; (unsigned int) i < numOfInsts; i++){
         int instKey = i;
         int instLatency = opsLatency[progTrace[i].opcode];
         pProgGraph->insertInst(progTrace[i], instKey, instLatency);
@@ -159,7 +166,7 @@ int getInstDepth(ProgCtx ctx, unsigned int theInst) {
 //        return 0; // return -1 if not dependent in anything
 //    }
     int numOfInsts = pGraph->numOfInsts;
-    if (theInst < 0 || theInst >= numOfInsts){
+    if (theInst < 0 || theInst >= (unsigned int) numOfInsts){
         return -1; // illegal instruction
     }
     int instDepth = pGraph->instArray[theInst].depth; // return instruction's depth
@@ -171,7 +178,7 @@ int getInstDeps(ProgCtx ctx, unsigned int theInst, int *src1DepInst, int *src2De
         return -1;
     instGraph * pGraph = (instGraph *)ctx;
     int numOfInsts = pGraph->numOfInsts;
-    if (theInst < 0 || theInst >= numOfInsts) {
+    if (theInst < 0 || theInst >= (unsigned int) numOfInsts) {
         return -1; // illegal instruction
     }
     *src1DepInst = pGraph->instArray[theInst].dependency1;
