@@ -7,7 +7,8 @@
 // meta-instructions for dependencies
 #define ENTRY -1
 #define EXIT -2
-
+//typedef std::map<int,int>::iterator mapIt;
+typedef std::pair<int,int> regPair;
 using std::map;
 
 //******************************************************************************************************//
@@ -15,16 +16,21 @@ using std::map;
 //******************************************************************************************************//
 class instruction{
 public:
-    unsigned int opcode;
+    int instKey;
+    int instTime; // inst execute time
     int dstIdx;
     unsigned int src1Idx;
     unsigned int src2Idx;
-    int depth; // time until inst. can be executed
-    int instKey;
-    // new
     int dependency1;
     int dependency2;
-    int instTime; // inst execute time
+    int depth; // time until inst. can be executed
+
+
+    instruction(int instKey, int instTime, int dstIdx, unsigned int src1Idx, unsigned int src2Idx,
+                int dependency1, int dependency2, int depth) : instKey(instKey), instTime(instTime),
+                                                               dstIdx(dstIdx), src1Idx(src1Idx), src2Idx(src2Idx),
+                                                               dependency1(dependency1), dependency2(dependency2),
+                                                               depth(depth) {}
 };
 
 class instGraph{
@@ -56,6 +62,37 @@ public:
         delete[] instArray;
 
     };
+
+
+
+   // * look for register deps. in regMap (input reg)
+    int findDepInRegMap(int srcIdx){
+        auto it = regMap.find(srcIdx);
+        if(it == regMap.end()){
+            return ENTRY;
+        }
+        else return it->first;
+    }
+
+    //* update regMap (dest register)
+    void updateRegMap(int reg, int instKey){
+        auto it = regMap.find(reg);
+        if(it == regMap.end()){
+            regMap.insert ( regPair(reg,instKey) );
+        }
+        else{
+            it->second = instKey;
+        }
+    }
+
+    //  * calculate depth
+    int calcDepth(int keyDep1, int keyDep2){
+        int dep1Time = instArray[keyDep1].depth + instArray[keyDep1].instTime;
+        int dep2Time = instArray[keyDep2].depth + instArray[keyDep2].instTime;
+
+    }
+
+
     /*
      * initial instruction instance
      * look for register deps. in regMap (input reg)
@@ -63,7 +100,18 @@ public:
      * update regMap (dest register)
      * calculate depth
      * */
-    void insertInst(InstInfo inst, int key, int latency){};
+
+    // get all information about the instruction and call the instruction c'tor
+    void insertInst(InstInfo inst, int key, int latency){
+        int dep1Key = findDepInRegMap(inst.src1Idx);
+        int dep2Key = findDepInRegMap(inst.src2Idx);
+        int depth = calcDepth(dep1Key,dep2Key);
+
+        instArray[key] = instruction(key,latency,inst.dstIdx,inst.src1Idx, inst.src2Idx,dep1Key,dep2Key,depth);
+        updateRegMap(inst.src1Idx, key);
+        updateRegMap(inst.src2Idx, key);
+
+    };
 
 
 
